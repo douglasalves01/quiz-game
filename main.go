@@ -2,8 +2,10 @@ package main
 
 import (
 	"bufio"
+	"encoding/csv"
 	"fmt"
 	"os"
+	"strconv"
 )
 type Question struct{
 	Text string
@@ -14,6 +16,37 @@ type GameState struct{
 	Name string
 	Points string
 	Questions []Question
+}
+func (g *GameState) ProcessCSV() {
+	f, err := os.Open("quiz-go.csv")
+	if err != nil {
+		panic("erro ao ler o arquivo")
+	}
+	defer f.Close()
+	reader := csv.NewReader(f)
+	records, err := reader.ReadAll()
+	if err != nil {
+		panic("Erro ao ler csv")
+	}
+	for index, record := range records {
+		fmt.Println(index, record)
+		if index > 0 {
+			question := Question {
+				Text: record[0],
+				Options: record[1:5],
+				Answer: toInt(record[5]),
+			}
+			g.Questions = append(g.Questions, question)
+		}
+	}
+}
+func toInt(s string) int {
+	i, err := strconv.Atoi(s)
+	
+	if err != nil {
+		panic(err)
+	}
+	return i
 }
 
 func (g *GameState) init(){
@@ -28,7 +61,10 @@ func (g *GameState) init(){
 	}
 	g.Name = name
 }
+
 func main(){
-	game1 :=&GameState{}
-	game1.init()
+	game := &GameState{}
+	game.ProcessCSV()
+	game.init()
+	fmt.Println(game)
 }
